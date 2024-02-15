@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import {
+  type DialogContentProps,
   Content,
-  DialogContentProps,
   Portal,
   Root,
   Trigger,
@@ -22,10 +22,11 @@ const Drawer = ({
   onInteractOutside,
   ...props
 }: DrawerProps) => {
-  const contentClasses =
-    "z-10 absolute top-0 left-nav-narrow data-[state=open]:animate-drawer-out data-[state=closed]:animate-drawer-in";
-  const styleClasses =
-    "bg-background h-dvh w-nav-drawer border-r border-r-borders rounded-r-2xl";
+  const contentClass = {
+    base: "z-10 absolute top-0 left-nav-narrow bg-background h-dvh w-nav-drawer border-r border-r-borders rounded-r-2xl",
+    state:
+      "data-[state=open]:animate-drawer-out data-[state=closed]:animate-drawer-in",
+  };
 
   return (
     <Root modal={false} {...props}>
@@ -33,7 +34,7 @@ const Drawer = ({
       <Portal>
         <Content
           onInteractOutside={onInteractOutside}
-          className={clsx(contentClasses, styleClasses)}
+          className={clsx(contentClass.base, contentClass.state)}
         >
           {children}
         </Content>

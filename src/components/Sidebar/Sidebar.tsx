@@ -1,7 +1,6 @@
-import { useRouter } from "next/router";
+import { useState } from "react";
 import {
   IconCreate,
-  IconCreateFilled,
   IconDirect,
   IconDirectFilled,
   IconExplore,
@@ -17,17 +16,22 @@ import {
   IconSearchFilled,
   IconThreads,
 } from "../icons";
-import Link from "next/link";
 import clsx from "clsx";
-import SearchDrawer from "./SearchDrawer";
 import Logo from "./Logo";
-import { useState } from "react";
+import SearchDrawer from "./SearchDrawer";
 import NotificationsDrawer from "./NotificationsDrawer";
-import { DrawerProps } from "./Drawer";
+import SidebarDrawer from "./SidebarDrawer";
+import SidebarLink from "./SidebarLink";
+import type { SidebarItem } from "@/types";
+import Tooltip from "../Tooltip";
+import CreateMenu from "./CreateMenu";
+import SidebarMenu from "./SidebarMenu";
+import MoreMenu from "./MoreMenu";
 
-const links = [
+const items: SidebarItem[] = [
   {
     id: "home",
+    type: "link",
     icon: {
       base: IconHome,
       active: IconHomeFilled,
@@ -38,20 +42,18 @@ const links = [
   },
   {
     id: "search",
+    type: "drawer",
     icon: {
       base: IconSearch,
       active: IconSearchFilled,
     },
     ariaLabel: "Search",
     label: "Search",
-    // drawer: {
-    //   component: SearchDrawer,
-    //   open: false,
-    // },
     drawer: SearchDrawer,
   },
   {
     id: "explore",
+    type: "link",
     icon: {
       base: IconExplore,
       active: IconExploreFilled,
@@ -62,6 +64,7 @@ const links = [
   },
   {
     id: "reels",
+    type: "link",
     icon: {
       base: IconReels,
       active: IconReelsFilled,
@@ -72,6 +75,7 @@ const links = [
   },
   {
     id: "messages",
+    type: "link",
     icon: {
       base: IconDirect,
       active: IconDirectFilled,
@@ -82,148 +86,127 @@ const links = [
   },
   {
     id: "notifications",
+    type: "drawer",
     icon: {
       base: IconHeart,
       active: IconHeartFilled,
     },
     ariaLabel: "Notifications",
     label: "Notifications",
-    // drawer: {
-    //   component: SearchDrawer,
-    //   open: false,
-    // },
     drawer: NotificationsDrawer,
   },
   {
     id: "create",
-    icon: {
-      base: IconCreate,
-      active: IconCreateFilled,
-    },
+    type: "menu",
+    icon: IconCreate,
     ariaLabel: "New post",
     label: "Create",
-    href: "/create",
+    menu: CreateMenu,
   },
 ];
 
+export const buttonClass =
+  "group w-full gap-4 flex items-center p-3 rounded-lg hover:bg-background-hover active:opacity-50 transition-all duration-200";
+
+export const iconClass =
+  "w-6 h-6 min-w-6 min-h-6 group-hover:scale-105 group-active:scale-95 transition-all pointer-events-none";
+
 const Sidebar = () => {
-  const [openDrawer, setOpenDrawer] = useState<string>();
+  const [drawerOpen, setDrawerOpen] = useState<string>();
+  const [hoveredMenu, setHoveredMenu] = useState<string>();
 
-  const { pathname } = useRouter();
-
-  const buttonClasses =
-    "group w-full gap-4 flex items-center p-3 rounded-lg hover:bg-background-hover transition-all duration-200";
-  const iconClasses =
-    "w-6 h-6 group-hover:scale-105 transition-all pointer-events-none";
+  const handleContentHover = (hovered?: string) => {
+    setHoveredMenu(hovered);
+  };
 
   return (
     <div
       className={clsx(
         "z-20 flex flex-col gap-5 h-dvh py-6 px-3 bg-background border-r border-r-borders transition-all duration-300 ease-out",
         {
-          "w-nav-narrow md:w-nav-medium": !openDrawer,
-          "w-nav-narrow border-r-0": openDrawer,
+          "w-nav-narrow md:w-nav-medium": !drawerOpen,
+          "w-nav-narrow border-r-0": drawerOpen,
         }
       )}
     >
-      <Logo openDrawer={openDrawer} />
+      <Logo drawerOpen={drawerOpen} />
 
-      <div className="flex flex-col gap-2 mb-auto">
-        {links.map(({ id, href, ariaLabel, icon, label, drawer }) => {
-          if (drawer) {
-            const isActive = openDrawer === id;
+      <ul className="flex flex-col gap-2 mb-auto">
+        {items.map((item) => {
+          const { id, type } = item;
 
-            const Drawer = drawer;
-            const Icon = isActive ? icon.active : icon.base;
+          switch (type) {
+            case "drawer":
+              return (
+                <SidebarDrawer
+                  key={id}
+                  item={item}
+                  drawerOpen={drawerOpen}
+                  setDrawerOpen={setDrawerOpen}
+                />
+              );
 
-            const handleOpen: DrawerProps["onOpenChange"] = (open) => {
-              setOpenDrawer(open ? id : undefined);
-            };
+            case "link":
+              return (
+                <SidebarLink key={id} item={item} drawerOpen={drawerOpen} />
+              );
 
-            const handleBlur: DrawerProps["onInteractOutside"] = (event) => {
-              const { target } = event;
-
-              // Prevent `openDrawerState` from going undefined during blur
-              // of an active drawer when selecting a different drawer
-              if (target instanceof HTMLElement && target.id === "drawer") {
-                event.preventDefault();
-              }
-            };
-
-            return (
-              <Drawer
-                key={id}
-                open={isActive}
-                onOpenChange={handleOpen}
-                onInteractOutside={handleBlur}
-                trigger={
-                  <button
-                    id="drawer"
-                    className={clsx(buttonClasses, "transition-none", {
-                      "border border-white p-[11px]": isActive,
-                    })}
-                  >
-                    <Icon aria-label={ariaLabel} className={iconClasses} />
-                    <span
-                      className={clsx({
-                        hidden: openDrawer,
-                        "hidden md:block": !openDrawer,
-                      })}
-                    >
-                      {label}
-                    </span>
-                  </button>
-                }
-              />
-            );
-          }
-
-          if (href) {
-            const isActive = pathname === href;
-            const Icon = isActive && !openDrawer ? icon.active : icon.base;
-
-            return (
-              <Link key={id} href={href} className={buttonClasses}>
-                <Icon aria-label={ariaLabel} className={iconClasses} />
-                <span
-                  className={clsx({
-                    "font-bold": isActive,
-                    hidden: openDrawer,
-                    "hidden md:block": !openDrawer,
-                  })}
-                >
-                  {label}
-                </span>
-              </Link>
-            );
+            case "menu":
+              return (
+                <SidebarMenu
+                  key={id}
+                  item={item}
+                  drawerOpen={drawerOpen}
+                  onContentHover={handleContentHover}
+                  hoveredMenu={hoveredMenu}
+                />
+              );
           }
         })}
-      </div>
+      </ul>
 
-      <div className="flex flex-col gap-2">
-        <a className={buttonClasses}>
-          <IconThreads aria-label="Threads" className={iconClasses} />
-          <span
-            className={clsx({
-              hidden: openDrawer,
-              "hidden md:block": !openDrawer,
-            })}
-          >
-            Threads
-          </span>
-        </a>
-        <button className={buttonClasses}>
-          <IconMenu aria-label="Menu" className={iconClasses} />
-          <span
-            className={clsx({
-              hidden: openDrawer,
-              "hidden md:block": !openDrawer,
-            })}
-          >
-            More
-          </span>
-        </button>
-      </div>
+      <ul className="flex flex-col gap-2">
+        <Tooltip label="Threads" mobileOnly>
+          <li>
+            <a
+              href="https://threads.net"
+              className={clsx(buttonClass, "cursor-pointer")}
+            >
+              <IconThreads aria-label="Threads" className={iconClass} />
+              <span
+                className={clsx({
+                  hidden: drawerOpen,
+                  "hidden md:block": !drawerOpen,
+                })}
+              >
+                Threads
+              </span>
+            </a>
+          </li>
+        </Tooltip>
+
+        <Tooltip label="More" hideTooltip={hoveredMenu === "menu"} mobileOnly>
+          <li>
+            <MoreMenu
+              id="menu"
+              trigger={
+                <button className={buttonClass}>
+                  <IconMenu aria-label="Menu" className={iconClass} />
+                  <span
+                    className={clsx({
+                      hidden: drawerOpen,
+                      "hidden md:block": !drawerOpen,
+                    })}
+                  >
+                    More
+                  </span>
+                </button>
+              }
+              onContentHover={handleContentHover}
+            />
+          </li>
+        </Tooltip>
+      </ul>
     </div>
   );
 };

@@ -3,10 +3,10 @@ import Link from "next/link";
 import { IconBrand, IconBrandLogo } from "../icons";
 
 type LogoProps = {
-  openDrawer?: string;
+  drawerOpen?: string;
 };
 
-const Logo = ({ openDrawer }: LogoProps) => {
+const Logo = ({ drawerOpen }: LogoProps) => {
   return (
     <div className="h-[60px]">
       <Link href="/" className="relative">
@@ -16,8 +16,8 @@ const Logo = ({ openDrawer }: LogoProps) => {
             "absolute p-3 box-content mt-1 transition-all duration-300",
             {
               "scale-80 md:scale-100 opacity-0 md:opacity-100 origin-left":
-                !openDrawer,
-              "opacity-0": openDrawer,
+                !drawerOpen,
+              "opacity-0": drawerOpen,
             }
           )}
         />
@@ -27,8 +27,8 @@ const Logo = ({ openDrawer }: LogoProps) => {
             "absolute p-3 h-6 w-6 box-content rounded-lg hover:bg-background-hover",
             {
               "scale-100 md:scale-0 opacity-100 md:opacity-0 duration-300":
-                !openDrawer,
-              "block hover:scale-105 duration-200": openDrawer,
+                !drawerOpen,
+              "block hover:scale-105 duration-200": drawerOpen,
             }
           )}
         />
